@@ -24,18 +24,19 @@ const (
 	ModeDeprovision Mode = "Deprovision"
 )
 
-var policies = map[Mode][]string{
-	ModeFull:        {"*"},
-	ModeProvision:   {"Observe", "Create", "Update", "LateInitialize"},
-	ModeObserveOnly: {"Observe"},
-	ModeDeprovision: {"Observe", "Create", "Delete"},
-}
-
-// Policies returns the management policies for the mode.
+// Policies returns the management policies for the mode. Every set is one of
+// the combinations crossplane-runtime supports.
 func (m Mode) Policies() ([]string, error) {
-	p, ok := policies[m]
-	if !ok {
+	switch m {
+	case ModeFull:
+		return []string{"*"}, nil
+	case ModeProvision:
+		return []string{"Observe", "Create", "Update", "LateInitialize"}, nil
+	case ModeObserveOnly:
+		return []string{"Observe"}, nil
+	case ModeDeprovision:
+		return []string{"Observe", "Create", "Delete"}, nil
+	default:
 		return nil, errors.Errorf("unknown mode %q: must be one of Full, Provision, ObserveOnly, Deprovision", m)
 	}
-	return p, nil
 }

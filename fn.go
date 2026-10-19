@@ -139,7 +139,7 @@ func lookup(req *fnv1.RunFunctionRequest, xr *resource.Composite, ref string) (s
 	case strings.HasPrefix(ref, "context."):
 		v, err = fieldpath.Pave(req.GetContext().AsMap()).GetString(strings.TrimPrefix(ref, "context."))
 	default:
-		return "", errors.Errorf("modeRef %q must start with spec., status., or context.", ref)
+		return "", errors.Errorf("modeRef %q must be a spec., status., or context. path", ref)
 	}
 	if fieldpath.IsNotFound(err) {
 		return "", nil

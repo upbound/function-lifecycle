@@ -161,6 +161,7 @@ linters:
           - gochecknoglobals
           - gochecknoinits
           - gocognit
+          - goconst
           - gosec
           - scopelint
           - unparam
