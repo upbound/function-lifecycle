@@ -26,3 +26,15 @@ uses the Crossplane binary as the render engine. The top of the
 | `xr-observe-only.yaml` | ObserveOnly | `[Observe]` |
 | `xr-deprovision.yaml` | Deprovision | `[Observe, Create, Delete]` |
 | `xr-invalid.yaml` | Orphan | fatal result, nothing rendered |
+| `xr-spec-mode.yaml` | ObserveOnly, from `spec.parameters.managementMode` via `modeRef` | `[Observe]` |
+
+The annotation always wins. Without it, `modeRef` is read, then the input's
+`mode`, then `Full`.
+
+To drive the mode from the pipeline context, for example an EnvironmentConfig
+loaded by function-environment-configs, use `composition-environment.yaml`:
+
+```shell
+make -C example render COMPOSITION=composition-environment.yaml \
+  CONTEXT='apiextensions.crossplane.io/environment={"managementMode":"Deprovision"}'
+```

@@ -16,6 +16,9 @@
 SHELL := /bin/bash
 
 XR ?= xr.yaml
+COMPOSITION ?= composition.yaml
+# Pipeline context, e.g. CONTEXT='apiextensions.crossplane.io/environment={"managementMode":"Deprovision"}'
+CONTEXT ?=
 # Render needs the full path to the binary.
 CROSSPLANE_BINARY ?= $(shell command -v crossplane-core)
 PT ?= function-patch-and-transform
@@ -24,7 +27,7 @@ RENDER := crossplane composition render --include-function-results --crossplane-
 .PHONY: render tools pt stop
 
 render: pt
-	$(RENDER) $(XR) composition.yaml functions.yaml
+	$(RENDER) $(XR) $(COMPOSITION) functions.yaml $(if $(CONTEXT),--context-values='$(CONTEXT)')
 
 tools:
 	@[ -x "$(CROSSPLANE_BINARY)" ] || { echo "crossplane-core isn't on your PATH. See the top of example/Makefile."; exit 1; }
