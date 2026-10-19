@@ -1,7 +1,9 @@
-# Render the example pipeline against your function running locally.
+# Render the examples against function-lifecycle running locally.
 #
-#   go run . --insecure --debug                   # terminal 1
-#   make -C example render XR=xr-provision.yaml   # terminal 2
+#   make test                          # build and start the function, render every example, report PASS/FAIL
+#   make serve                         # run the function in the foreground, with debug logs
+#   make render XR=xr-provision.yaml   # render one XR (start the function first: make serve, or go run)
+#   make stop                          # stop function-patch-and-transform
 #
 # Render runs without Docker. It needs the crossplane CLI (v2.5+) and two
 # binaries on your PATH:
@@ -22,12 +24,27 @@ CONTEXT ?=
 # Render needs the full path to the binary.
 CROSSPLANE_BINARY ?= $(shell command -v crossplane-core)
 PT ?= function-patch-and-transform
+export CROSSPLANE_BINARY
+
+ROOT := ..
+BIN ?= /tmp/function-lifecycle-render
 RENDER := crossplane composition render --include-function-results --crossplane-binary=$(CROSSPLANE_BINARY)
 
-.PHONY: render tools pt stop
+.PHONY: render test serve build tools pt stop clean
 
 render: pt
 	$(RENDER) $(XR) $(COMPOSITION) functions.yaml $(if $(CONTEXT),--context-values='$(CONTEXT)')
+
+test: build pt
+	@./test.sh $(BIN)
+
+serve: build pt
+	$(BIN) --insecure --debug --address=127.0.0.1:9443
+
+build: $(BIN)
+
+$(BIN): $(wildcard $(ROOT)/*.go) $(wildcard $(ROOT)/input/v1beta1/*.go)
+	cd $(ROOT) && go build -o $(BIN) .
 
 tools:
 	@[ -x "$(CROSSPLANE_BINARY)" ] || { echo "crossplane-core isn't on your PATH. See the top of example/Makefile."; exit 1; }
@@ -45,3 +62,6 @@ pt: tools
 
 stop:
 	-pkill -f "$(PT) --insecure --address=127.0.0.1:9444"
+
+clean: stop
+	rm -f $(BIN) /tmp/render-*.out /tmp/function-lifecycle-render.log /tmp/function-patch-and-transform.log
