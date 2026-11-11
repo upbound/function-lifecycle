@@ -76,6 +76,22 @@ shows the Operation, with the two Apps it changed in
 `status.appliedResourceRefs`, then the patch it applies to each.
 `cronoperation.yaml` renders the same way.
 
+## Run it as a WatchOperation
+
+`watchoperation.yaml` freezes each App labelled `incident: "true"` with
+`mode: ObserveOnly`, as soon as the label appears. No `kubectl annotate` is
+needed: `runOperation` already annotates every required resource, and a
+WatchOperation passes the watched resource as one. Render it with
+`--watched-resource`, here `incident-app.yaml`:
+
+```shell
+crossplane operation render example/watchoperation.yaml example/functions.yaml \
+  --watched-resource=example/incident-app.yaml -r --crossplane-binary=$(which crossplane-core)
+```
+
+The output shows the Operation succeeded, then the patch it applies: the
+`lifecycle.fn.crossplane.io/mode: ObserveOnly` annotation on the watched App.
+
 ## Test every example
 
 With both functions running, render every example and check the output:

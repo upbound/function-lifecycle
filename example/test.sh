@@ -63,4 +63,19 @@ else
   echo "FAIL  operation (see $out)"
   fail=1
 fi
+
+# The WatchOperation freezes the App in incident-app.yaml labelled
+# incident: "true". It passes that App as the watched resource, so runOperation
+# annotates exactly one resource.
+out=/tmp/render-watchoperation.out
+crossplane operation render watchoperation.yaml functions.yaml \
+  -w incident-app.yaml -r --crossplane-binary="$ENGINE" >"$out" 2>&1
+rc=$?
+flat=$(tr -s ' \n' '  ' <"$out")
+if [[ $rc -eq 0 && $flat == *"lifecycle.fn.crossplane.io/mode: ObserveOnly"* && $flat == *"Set lifecycle.fn.crossplane.io/mode to ObserveOnly on 1 resources"* ]]; then
+  echo "PASS  watchoperation"
+else
+  echo "FAIL  watchoperation (see $out)"
+  fail=1
+fi
 exit $fail

@@ -1,0 +1,26 @@
+# A WatchOperation that freezes each App labelled incident: "true" with
+# mode: ObserveOnly, as soon as the label appears. No kubectl annotate needed.
+# The runOperation function annotates every required resource it receives; a
+# WatchOperation passes the watched resource as one, so no code change is
+# required.
+apiVersion: ops.crossplane.io/v1alpha1
+kind: WatchOperation
+metadata:
+  name: freeze-incident-apps
+spec:
+  watch:
+    apiVersion: example.crossplane.io/v1
+    kind: App
+    matchLabels:
+      incident: "true"
+  operationTemplate:
+    spec:
+      mode: Pipeline
+      pipeline:
+      - step: freeze
+        functionRef:
+          name: function-lifecycle
+        input:
+          apiVersion: lifecycle.fn.crossplane.io/v1beta1
+          kind: Input
+          mode: ObserveOnly

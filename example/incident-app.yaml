@@ -1,0 +1,13 @@
+# The watched resource for the WatchOperation in watchoperation.yaml: an App
+# that just got labelled incident: "true". Render it with
+# --watched-resource=incident-app.yaml; runOperation then annotates it.
+apiVersion: example.crossplane.io/v1
+kind: App
+metadata:
+  name: payments
+  namespace: default
+  labels:
+    incident: "true"
+spec:
+  parameters:
+    region: us-west-2
