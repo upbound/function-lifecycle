@@ -105,7 +105,8 @@ kubectl delete app my-app
 
 * It only changes desired resources that have `spec.forProvider`, which every
   MR has. Plain Kubernetes objects and nested XRs are skipped.
-* It overwrites `spec.managementPolicies` set by earlier pipeline steps.
+* It overwrites `spec.managementPolicies` set by earlier pipeline steps, unless
+  the input sets `respectExisting: true`, in which case it leaves them alone.
 * The provider must support management policies. They're on by default in the
   upjet providers and provider-kubernetes, and off by default in the classic
   crossplane-contrib/provider-aws.
