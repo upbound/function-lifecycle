@@ -138,6 +138,38 @@ func TestRunFunction(t *testing.T) {
 				},
 			},
 		},
+		"RespectExisting": {
+			reason: "With respectExisting, policies an earlier pipeline step set are left alone",
+			args: args{
+				req: &fnv1.RunFunctionRequest{
+					Observed: xr(""),
+					Desired:  desired(map[string]string{"bucket": bucketWith(`["Observe"]`), "settings": configMap}),
+					Input:    input(`"mode":"Provision","respectExisting":true`),
+				},
+			},
+			want: want{
+				rsp: &fnv1.RunFunctionResponse{
+					Meta:    &fnv1.ResponseMeta{Ttl: durationpb.New(response.DefaultTTL)},
+					Desired: desired(map[string]string{"bucket": bucketWith(`["Observe"]`), "settings": configMap}),
+					Results: []*fnv1.Result{
+						{
+							Severity: fnv1.Severity_SEVERITY_NORMAL,
+							Message:  "Provision (from input mode): set managementPolicies [Observe Create Update LateInitialize] on 0 managed resources (1 skipped), 1 kept existing",
+							Target:   fnv1.Target_TARGET_COMPOSITE.Enum(),
+						},
+					},
+					Conditions: []*fnv1.Condition{
+						{
+							Type:    "LifecycleMode",
+							Status:  fnv1.Status_STATUS_CONDITION_TRUE,
+							Reason:  "Provision",
+							Message: new("Composed managed resources use managementPolicies [Observe Create Update LateInitialize] (mode from input mode)"),
+							Target:  fnv1.Target_TARGET_COMPOSITE.Enum(),
+						},
+					},
+				},
+			},
+		},
 		"ObserveOnly": {
 			reason: "The ObserveOnly mode should only allow Crossplane to observe managed resources",
 			args: args{

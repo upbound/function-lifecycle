@@ -82,12 +82,19 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		return rsp, nil
 	}
 
-	var applied, skipped int
+	var applied, kept, skipped int
 	for name, dr := range desired {
 		if !isManaged(dr) {
 			f.log.Debug("Skipping composed resource that is not a managed resource", "resource", name)
 			skipped++
 			continue
+		}
+		if in.RespectExisting {
+			if _, err := dr.Resource.GetValue("spec.managementPolicies"); err == nil {
+				f.log.Debug("Keeping existing management policies", "resource", name)
+				kept++
+				continue
+			}
 		}
 		if err := dr.Resource.SetValue("spec.managementPolicies", policies); err != nil {
 			response.Fatal(rsp, errors.Wrapf(err, "cannot set spec.managementPolicies on composed resource %q", name))
@@ -104,7 +111,11 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 
 	// Results become events on the XR. Conditions stay on the XR's status, so
 	// kubectl get and crossplane beta trace show the active mode.
-	response.Normalf(rsp, "%s (from %s): set managementPolicies %v on %d managed resources (%d skipped)", mode, source, policies, applied, skipped)
+	result := fmt.Sprintf("%s (from %s): set managementPolicies %v on %d managed resources (%d skipped)", mode, source, policies, applied, skipped)
+	if kept > 0 {
+		result += fmt.Sprintf(", %d kept existing", kept)
+	}
+	response.Normalf(rsp, "%s", result)
 	response.ConditionTrue(rsp, ConditionTypeLifecycleMode, string(mode)).
 		WithMessage(fmt.Sprintf("Composed managed resources use managementPolicies %v (mode from %s)", policies, source)).
 		TargetComposite()

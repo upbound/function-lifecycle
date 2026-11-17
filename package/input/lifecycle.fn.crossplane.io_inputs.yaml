@@ -57,6 +57,11 @@ spec:
               that contain dots, for example
               context.[apiextensions.crossplane.io/environment].managementMode.
             type: string
+          respectExisting:
+            description: |-
+              RespectExisting leaves spec.managementPolicies alone on composed
+              resources that an earlier pipeline step already set them on.
+            type: boolean
         type: object
     served: true
     storage: true

@@ -32,4 +32,9 @@ type Input struct {
 	// context.[apiextensions.crossplane.io/environment].managementMode.
 	// +optional
 	ModeRef string `json:"modeRef,omitempty"`
+
+	// RespectExisting leaves spec.managementPolicies alone on composed
+	// resources that an earlier pipeline step already set them on.
+	// +optional
+	RespectExisting bool `json:"respectExisting,omitempty"`
 }
